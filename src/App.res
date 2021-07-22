@@ -101,6 +101,21 @@ let default = () => {
 
   let (completedItems, activeItems) = todos->Belt.Array.partition(todo => todo.completed)
 
+  let allCompleted = switch activeItems {
+  | [] => true
+  | _ => false
+  }
+
+  let onClearCompleted = _ => setTodos(_ => activeItems)
+
+  let onToggleAll = _ =>
+    setTodos(_ =>
+      todos->Js.Array2.map(todo => {
+        ...todo,
+        completed: !allCompleted,
+      })
+    )
+
   let visibleItems = switch filter {
   | All => todos
   | Completed => completedItems
@@ -116,7 +131,13 @@ let default = () => {
       | [] => React.null
       | _ =>
         <section className="main">
-          <input id="toggle-all" className="toggle-all" type_="checkbox" />
+          <input
+            onChange=onToggleAll
+            checked=allCompleted
+            id="toggle-all"
+            className="toggle-all"
+            type_="checkbox"
+          />
           <label htmlFor="toggle-all"> {s("Mark all as complete")} </label>
           <ul className="todo-list">
             {visibleItems
@@ -165,7 +186,10 @@ let default = () => {
             </ul>
             {switch completedItems {
             | [] => React.null
-            | _ => <button className="clear-completed"> {s("Clear completed")} </button>
+            | _ =>
+              <button onClick={onClearCompleted} className="clear-completed">
+                {s("Clear completed")}
+              </button>
             }}
           </footer>
         }
