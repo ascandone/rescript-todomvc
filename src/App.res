@@ -78,6 +78,7 @@ module Footer = {
 let default = () => {
   let (todos, setTodos) = React.useState(() => [])
   let filter = useFilter()
+  let (editingTodo, setEditingTodo) = React.useState(() => None)
 
   let onTodoSubmit = text =>
     setTodos(_ => {
@@ -124,6 +125,38 @@ let default = () => {
 
   let activeItemsCount = activeItems->Js.Array2.length
 
+  let onClickedEditTodo = (todo, _) => {
+    setEditingTodo(_ => Some(todo.id, todo.text))
+  }
+
+  let onEditTodo = (evt: ReactEvent.Form.t) =>
+    setEditingTodo(_ =>
+      editingTodo->Belt.Option.map(((id, _)) => {
+        let newValue = ReactEvent.Form.target(evt)["value"]
+        (id, newValue)
+      })
+    )
+
+  let onEditBlur = _ => setEditingTodo(_ => None)
+
+  let onEditKeydown = onEnter(() =>
+    switch editingTodo {
+    | None => ()
+    | Some((id, value)) => {
+        setEditingTodo(_ => None)
+        setTodos(_ =>
+          todos->Js.Array2.map(todo =>
+            if todo.id != id {
+              todo
+            } else {
+              {...todo, text: value}
+            }
+          )
+        )
+      }
+    }
+  )
+
   <>
     <section className="todoapp">
       <Header onSubmit=onTodoSubmit />
@@ -144,7 +177,16 @@ let default = () => {
             ->Js.Array2.map(todo =>
               <li
                 key={Belt.Int.toString(todo.id)}
-                className={cs([("completed", todo.completed), ("editing", false)])}>
+                className={cs([
+                  ("completed", todo.completed),
+                  (
+                    "editing",
+                    switch editingTodo {
+                    | None => false
+                    | Some((id, _)) => todo.id == id
+                    },
+                  ),
+                ])}>
                 <div className="view">
                   <input
                     className="toggle"
@@ -152,14 +194,18 @@ let default = () => {
                     checked=todo.completed
                     onChange={onToggleTodo(todo)}
                   />
-                  <label onDoubleClick={Js.Console.log}> {s(todo.text)} </label>
+                  <label onDoubleClick={onClickedEditTodo(todo)}> {s(todo.text)} </label>
                   <button onClick={onRemoveTodo(todo)} className="destroy" />
                 </div>
                 <input
                   className="edit"
-                  value={todo.text}
-                  onBlur={Js.Console.log}
-                  onInput={Js.Console.log}
+                  value={switch editingTodo {
+                  | None => todo.text
+                  | Some((_, value)) => value
+                  }}
+                  onBlur={onEditBlur}
+                  onInput={onEditTodo}
+                  onKeyDown={onEditKeydown}
                 />
               </li>
             )
