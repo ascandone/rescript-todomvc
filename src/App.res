@@ -1,5 +1,8 @@
 let s = React.string
 
+@send external focus: Dom.element => unit = "focus"
+@val external requestAnimationFrame: (unit => unit) => unit = "requestAnimationFrame"
+
 let cs = arr =>
   arr->Js.Array2.filter(((_, b)) => b)->Js.Array2.map(((c, _)) => c)->Js.Array2.joinWith(" ")
 
@@ -125,8 +128,21 @@ let default = () => {
 
   let activeItemsCount = activeItems->Js.Array2.length
 
+  let editingTodoRef = React.useRef(Js.Nullable.null)
+  let refCallbackEditInput = (element: Js.nullable<Dom.element>) => {
+    editingTodoRef.current = element
+  }
+
+  let focusRef = () => {
+    switch editingTodoRef.current->Js.Nullable.toOption {
+    | None => ()
+    | Some(element) => focus(element)
+    }
+  }
+
   let onClickedEditTodo = (todo, _) => {
     setEditingTodo(_ => Some(todo.id, todo.text))
+    requestAnimationFrame(focusRef)
   }
 
   let onEditTodo = (evt: ReactEvent.Form.t) =>
@@ -198,10 +214,15 @@ let default = () => {
                   <button onClick={onRemoveTodo(todo)} className="destroy" />
                 </div>
                 <input
+                  ref=?{switch editingTodo {
+                  | Some((id, _)) if todo.id == id =>
+                    Some(ReactDOM.Ref.callbackDomRef(refCallbackEditInput))
+                  | _ => None
+                  }}
                   className="edit"
                   value={switch editingTodo {
-                  | None => todo.text
-                  | Some((_, value)) => value
+                  | Some((id, value)) if todo.id == id => value
+                  | _ => todo.text
                   }}
                   onBlur={onEditBlur}
                   onInput={onEditTodo}
