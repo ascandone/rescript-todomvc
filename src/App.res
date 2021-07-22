@@ -18,6 +18,9 @@ type todoItem = {
   id: int,
 }
 
+@scope("JSON") @val
+external parseTodoItems: string => array<todoItem> = "parse"
+
 type filter = All | Completed | Active
 
 let useFilter = () => {
@@ -77,9 +80,26 @@ module Footer = {
     </footer>
 }
 
+let storageNamespace = "todos"
+
 @react.component
 let default = () => {
-  let (todos, setTodos) = React.useState(() => [])
+  let (todos, setTodos) = React.useState(() =>
+    switch Dom.Storage2.localStorage->Dom.Storage2.getItem(storageNamespace) {
+    | None => []
+    | Some(str) => parseTodoItems(str)
+    }
+  )
+
+  React.useEffect1(() => {
+    let stringified = Js.Json.stringifyAny(todos)
+    Dom.Storage2.localStorage->Dom.Storage2.setItem(
+      storageNamespace,
+      stringified->Belt.Option.getUnsafe,
+    )
+    None
+  }, [todos])
+
   let filter = useFilter()
   let (editingTodo, setEditingTodo) = React.useState(() => None)
 
