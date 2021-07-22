@@ -155,7 +155,7 @@ let default = () => {
           <footer className="footer">
             <span className="todo-count">
               <strong> {activeItemsCount->React.int} </strong>
-              {s("item"->pluralize(activeItemsCount))}
+              {s(" item"->pluralize(activeItemsCount))}
               {s(" left")}
             </span>
             <ul className="filters">
@@ -164,8 +164,8 @@ let default = () => {
               {viewItem(~to_=Completed, ~label="Completed", ~href="#/completed")}
             </ul>
             {switch completedItems {
-            | [] => <button className="clear-completed"> {s("Clear completed")} </button>
-            | _ => React.null
+            | [] => React.null
+            | _ => <button className="clear-completed"> {s("Clear completed")} </button>
             }}
           </footer>
         }
