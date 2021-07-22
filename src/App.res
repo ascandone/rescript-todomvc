@@ -6,7 +6,7 @@ let default = () => {
     <section className="todoapp">
       <header className="header">
         <h1> {s("todos")} </h1>
-        <input className="new-todo" placeholder="What needs to be done?" autoFocus="" />
+        <input className="new-todo" placeholder="What needs to be done?" autoFocus=true />
       </header>
       /* This section should be hidden by default and shown when there are todos */
       <section className="main">
@@ -17,7 +17,7 @@ let default = () => {
           /* List items should get the class `editing` when editing and `completed` when marked as completed */
           <li className="completed">
             <div className="view">
-              <input className="toggle" type_="checkbox" checked="" />
+              <input className="toggle" type_="checkbox" checked=true />
               <label> {s("Taste JavaScript")} </label>
               <button className="destroy" />
             </div>
